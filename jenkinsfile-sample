@@ -27,13 +27,13 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                sh """
-                cd ${APP_DIR}
-                docker build -t ${IMAGE_NAME}:latest .
-                """
-            }
+    stage('Build Docker Image') {
+        steps {
+         sh """
+         cd node-app/node-app
+            docker build -t nodejs-app:latest .
+         """
+                 }
         }
 
         stage('Stop Old Container') {
