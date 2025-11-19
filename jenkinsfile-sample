@@ -1,46 +1,60 @@
 pipeline {
     agent any
 
+    environment {
+        REPO_URL = "https://github.com/sudarshanbarure/Jenkins1911.git"
+        ZIP_FILE = "node-app.zip"
+        APP_DIR = "node-app"
+        IMAGE_NAME = "nodejs-app"
+        CONTAINER_NAME = "nodejs-container"
+        PORT = "3000"
+    }
+
     stages {
 
         stage('Clone Repository') {
             steps {
-                // your git clone code here
+                git url: "${REPO_URL}", branch: "main"
             }
         }
 
-        stage('Check Required Tools') {
+        stage('Extract Node App') {
             steps {
-                // check docker version
-                // check unzip version
+                sh """
+                rm -rf ${APP_DIR}
+                unzip ${ZIP_FILE} -d ${APP_DIR}
+                """
             }
         }
 
-        stage('Unzip Source Code') {
+        stage('Build Docker Image') {
             steps {
-                // unzip your code here
+                sh """
+                cd ${APP_DIR}
+                docker build -t ${IMAGE_NAME}:latest .
+                """
             }
         }
 
-        stage('Navigate & List Files') {
+        stage('Stop Old Container') {
             steps {
-                // cd into main folder
-                // list files
+                sh """
+                if [ \$(docker ps -q -f name=${CONTAINER_NAME}) ]; then
+                    docker stop ${CONTAINER_NAME}
+                fi
+                if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
+                    docker rm ${CONTAINER_NAME}
+                fi
+                """
             }
         }
 
-        stage('Docker Build Image') {
+        stage('Run New Container') {
             steps {
-                // docker build code here
+                sh """
+                docker run -d --name ${CONTAINER_NAME} -p ${PORT}:${PORT} ${IMAGE_NAME}:latest
+                """
             }
         }
-
-        stage('Docker Run Container') {
-            steps {
-                // remove existing container
-                // run new container
-            }
-        }
-
     }
 }
